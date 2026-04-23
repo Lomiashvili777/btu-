@@ -11,6 +11,45 @@
         line-height: 1.4;
         color: #333;
       }
+
+      #chat-container {
+        margin-top: 20px;
+        border-top: 1px solid #ccc;
+        padding-top: 20px;
+      }
+
+      #chat-messages {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #fafafa;
+      }
+
+      .message {
+        margin-bottom: 10px;
+      }
+
+      #chat-input {
+        width: 80%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      #send-btn {
+        padding: 10px 20px;
+        background-color: #0070ad;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      #send-btn:hover {
+        background-color: #005a8a;
+      }
     </style>
   </head>
   <body>
@@ -173,5 +212,55 @@ no shutdown
 
       </pre>
     </div>
+
+    <div id="chat-container">
+      <h2>AI Chat</h2>
+      <div id="chat-messages"></div>
+      <input type="text" id="chat-input" placeholder="Ask me anything..." />
+      <button id="send-btn">Send</button>
+    </div>
+
+    <script>
+      const chatMessages = document.getElementById("chat-messages");
+      const chatInput = document.getElementById("chat-input");
+      const sendBtn = document.getElementById("send-btn");
+
+      sendBtn.addEventListener("click", sendMessage);
+      chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+      });
+
+      async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addMessage("You", message);
+        chatInput.value = "";
+
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message }),
+          });
+          const data = await response.json();
+          if (data.reply) {
+            addMessage("AI", data.reply);
+          } else {
+            addMessage("AI", "Sorry, I couldn't get a response.");
+          }
+        } catch (error) {
+          addMessage("AI", "Error: " + error.message);
+        }
+      }
+
+      function addMessage(sender, text) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+        messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    </script>
   </body>
 </html>
