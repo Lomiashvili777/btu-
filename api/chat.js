@@ -18,7 +18,13 @@ module.exports = async function handler(req, res) {
             }
         );
 
+        if (!response.ok) {
+            return res.status(500).json({ error: `HF API error: ${response.status}` });
+        }
+
         const result = await response.json();
+
+        console.log('HF Response:', result);
 
         if (result[0] && result[0].generated_text) {
             const reply = result[0].generated_text;
@@ -26,7 +32,7 @@ module.exports = async function handler(req, res) {
         } else if (result.error) {
             return res.status(500).json({ error: result.error });
         } else {
-            return res.status(500).json({ error: 'No response from AI' });
+            return res.status(500).json({ error: 'No response from AI', details: result });
         }
     } catch (error) {
         console.error('Chat API Error:', error);
