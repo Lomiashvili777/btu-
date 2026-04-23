@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ka">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      .code-container {
+        background-color: #f4f4f4;
+        padding: 20px;
+        border-left: 5px solid #0070ad;
+        font-family: "Courier New", Courier, monospace;
+        line-height: 1.4;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="code-container">
+      <pre>
+enable
+configure terminal
+vlan 10
+name DATA
+vlan 20
+name DATA2
+vlan 30
+name VOICE
+vlan 99
+name MANAGEMENT
+ნაბიჯი 2. PC1 პორტის VLAN 10-ში გაწევრიანება
+interface fa0/1
+switchport mode access
+switchport access vlan 10
+ნაბიჯი 3. PC2 პორტის VLAN 20-ში გაწევრიანება
+interface fa0/2
+switchport mode access
+switchport access vlan 20
+ნაბიჯი 4. Router-on-a-Stick პორტი
+interface fa0/23
+switchport mode trunk
+switchport trunk native vlan 99
+ნაბიჯი 5. Trunk SW2-სთან
+interface fa0/24
+switchport mode trunk
+switchport trunk native vlan 99
+
+
+3
+ნაბიჯი 6. Management VLAN
+interface vlan 99
+ip address 192.168.99.2 255.255.255.0
+no shutdown
+ip default-gateway 192.168.99.1
+ნაწილი 3. Switch2 კონფიგურაცია (SW2 CLI)
+ნაბიჯი 1. VLAN-ების შექმნა
+enable
+configure terminal
+vlan 10
+name DATA
+vlan 20
+name DATA2
+vlan 30
+name VOICE
+vlan 99
+name MANAGEMENT
+ნაბიჯი 2. PC2 პორტის VLAN 20-ში გაწევრიანება: interface fa0/1
+interface fa0/1
+switchport mode access
+switchport access vlan 20
+ნაბიჯი 3. IP ტელეფონის პორტის VLAN 30-ში გაწევრიანება: interface fa0/2
+interface fa0/2
+switchport mode access
+switchport voice vlan 30
+ნაბიჯი 4. Trunk SW1-სთან
+interface fa0/24
+switchport mode trunk
+switchport trunk native vlan 99
+
+ნაბიჯი 5. Router-on-a-Stick პორტი
+interface fa0/23
+switchport mode trunk
+switchport trunk native vlan 99
+
+ნაბიჯი 6. Management VLAN
+interface vlan 99
+ip address 192.168.99.3 255.255.255.0
+no shutdown
+ip default-gateway 192.168.99.1
+4
+ნაწილი 4. Router (Router-on-a-Stick) კონფიგურაცია
+ნაბიჯი 1. ფიზიკური პორტი Up
+enable
+configure terminal
+
+interface g0/0
+no shutdown
+interface g0/1
+no shutdown
+ნაბიჯი 2. VLAN 10
+interface g0/0.10
+encapsulation dot1Q 10
+ip address 192.168.45.1 255.255.255.0
+ნაბიჯი 3. VLAN 20
+interface g0/0.20
+encapsulation dot1Q 20
+ip address 192.168.55.1 255.255.255.0
+
+ნაბიჯი 4. VLAN 30 Voice VLAN
+interface g0/0.30
+encapsulation dot1Q 30
+ip address 192.168.65.1 255.255.255.0
+
+ნაბიჯი 5. Native VLAN 99
+interface g0/0.99
+encapsulation dot1Q 99 native
+ip address 192.168.99.1 255.255.255.0
+ნაწილი 5. Router-ზე DHCP Pool შექმნა Voice VLAN-სთვის
+ნაბიჯი 1. DHCP Pool Voice VLAN
+service dhcp
+ip dhcp excluded-address 192.168.65.1
+ip dhcp pool VOICE
+network 192.168.65.0 255.255.255.0
+default-router 192.168.65.1
+option 150 ip 192.168.65.1
+ნაწილი 6. ქსელის ტესტირება
+ნაბიჯი 1. Switch:
+show vlan brief
+show interfaces trunk
+show running-config
+5
+ნაბიჯი 2. Router CLI:
+show ip interface brief
+show ip route
+show ip dhcp binding
+ნაბიჯი 3. კავშირის შემოწმება
+1. PC1 → PC2 ping
+ping 192.168.55.10
+2. PC1 → IP Phone ping Voice VLAN Router
+ping 192.168.65.x
+ყველა მოწყობილობას შორის უნდა იყოს კავშირი.
+
+
+
+
+ნაბიჯი 1. R0-ის კონფიგურაცია
+Enable
+Config t
+ipv6 unicast-routing
+interface g0/0
+ipv6 address 2001:DB8:5::1/64
+no shutdown
+interface s0/0/0
+ipv6 address 2001:DB8:30::1/64
+clock rate 64000
+no shutdown
+LAN2
+Network 2001:DB8:6::/64
+Router1 g0/0 2001:DB8:6::1
+PC2 2001:DB8:6::10
+PC3 2001:DB8:6::11
+8
+
+ნაბიჯი 2. R1-ის კონფიგურაცია IPv6
+Enable
+Config t
+ipv6 unicast-routing
+interface g0/0
+ipv6 address 2001:DB8:6::1/64
+no shutdown
+interface s0/0/0
+ipv6 address 2001:DB8:30::2/64
+no shutdown
+
+
+      </pre>
+    </div>
+  </body>
+</html>
