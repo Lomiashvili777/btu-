@@ -243,9 +243,19 @@ no shutdown
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message }),
           });
-          const data = await response.json();
+
+          const text = await response.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            throw new Error(`Invalid JSON response: ${text}`);
+          }
+
           if (data.reply) {
             addMessage("AI", data.reply);
+          } else if (data.error) {
+            addMessage("AI", `AI Error: ${data.error}`);
           } else {
             addMessage("AI", "Sorry, I couldn't get a response.");
           }
