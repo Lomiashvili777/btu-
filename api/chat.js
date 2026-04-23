@@ -1,5 +1,3 @@
-const { OpenAI } = require('openai');
-
 module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -11,22 +9,26 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({ error: 'API key not configured' });
-    }
-
-    const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    });
-
     try {
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
-            messages: [{ role: 'user', content: message }],
-        });
+        const response = await fetch(
+            'https://api-inference.huggingface.co/models/google/flan-t5-base',
+            {
+                headers: { Authorization: 'Bearer hf_placeholder' },
+                method: 'POST',
+                body: JSON.stringify({ inputs: message }),
+            }
+        );
 
-        const reply = completion.choices[0].message.content;
-        return res.status(200).json({ reply });
+        const result = await response.json();
+
+        if (result[0] && result[0].generated_text) {
+            const reply = result[0].generated_text;
+            return res.status(200).json({ reply });
+        } else if (result.error) {
+            return res.status(500).json({ error: result.error });
+        } else {
+            return res.status(500).json({ error: 'No response from AI' });
+        }
     } catch (error) {
         console.error('Chat API Error:', error);
         return res.status(500).json({ error: 'Failed to get response from AI' });
